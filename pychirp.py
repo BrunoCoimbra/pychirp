@@ -9,12 +9,15 @@ import htchirp
 # Functions take arguments from the command line when True
 interactive = False
 
-def fetch(remote_file = None, local_file = None):
+def fetch(remote_file=None, local_file=None):
     """Copy the remote_file from the submit machine to the execute machine, naming it local_file.
     
-    Keyword Arguments:
-        remote_file {string} -- File on submit machine (default: {None})
-        local_file {string} -- File on execute machine (default: {None})
+    Args:
+        remote_file (string, optional): File on submit machine. Defaults to None.
+        local_file (string, optional): File on execute machine. Defaults to None.
+    
+    Raises:
+        TypeError: If `remote_file` or `local_file` are not given in non-interactive mode.
     """
     if interactive:
         parser = argparse.ArgumentParser()
@@ -27,10 +30,72 @@ def fetch(remote_file = None, local_file = None):
         local_file = args.local_file
     
     if not isinstance(remote_file, str) or not isinstance(local_file, str):
-        raise TypeError("fetch() requires two strings")
+        raise TypeError("fetch() requires remote_file and local_file")
 
     with htchirp.HTChirp() as chirp:
         chirp.fetch(remote_file, local_file)
+
+def put(remote_file=None, local_file=None, mode=None, perm=None):
+    """Copy the local_file from the execute machine to the submit machine, naming it remote_file.
+       The optional -mode mode argument is one or more of the following characters describing the remote_file file:
+       w, open for writing; a, force all writes to append; t, truncate before use;
+       c, create the file, if it does not exist; x, fail if c is given and the file already exists.
+    
+    Args:
+        remote_file (string, optional): File on submit machine. Defaults to None.
+        local_file (string, optional): File on execute machine. Defaults to None.
+        mode (string, optional): Decribes remote_file open mode with one of the following characters. Defaults to None.
+            w, open for writing;
+            a, force all writes to append;
+            t, truncate before use;
+            c, create the file, if it does not exist;
+            x, fail if c is given and the file already exists. Defaults to None.
+        perm (string, optional): Describes the file access permissions in a Unix format.
+    
+    Raises:
+        TypeError: If `remote_file` or `local_file` are not given in non-interactive mode.
+    """
+    description = """Copy the local_file from the execute machine to the submit machine, naming it remote_file.
+
+The optional -perm UnixPerm argument describes the file access permissions in a Unix format;
+660 is an example Unix format.
+
+The optional -mode mode argument is one or more of the following characters describing the remote_file file:
+w, open for writing; a, force all writes to append; t, truncate before use;
+c, create the file, if it does not exist; x, fail if c is given and the file already exists. 
+"""
+
+    if interactive:
+        parser = argparse.ArgumentParser()
+        parser.prog = "%s fetch" % parser.prog
+        parser.description = description
+        parser.formatter_class = argparse.RawTextHelpFormatter
+        parser.add_argument("local_file")
+        parser.add_argument("remote_file")
+        parser.add_argument("-mode")
+        parser.add_argument("-perm")
+        args = parser.parse_args(sys.argv[2:])
+        local_file = args.local_file
+        remote_file = args.remote_file
+        mode = args.mode
+        perm = args.perm
+    
+    if not isinstance(remote_file, str) or not isinstance(local_file, str):
+        raise TypeError("put() requires at least remote_file and local_file")
+
+    opt_params = {}
+    if mode:
+        # Add "w" to along with the following characters to reproduce condor_chirp behavior
+        for c in "act":
+            if c in mode:
+                mode += "w"
+                break
+        opt_params["flags"] = mode
+    if perm:
+        opt_params["mode"] = perm
+
+    with htchirp.HTChirp() as chirp:
+        chirp.put(local_file, remote_file, **opt_params)
 
 if __name__ == "__main__":
     # Help text

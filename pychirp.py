@@ -1,4 +1,5 @@
 import sys
+import inspect
 import argparse
 import htchirp
 
@@ -19,9 +20,11 @@ def fetch(remote_file=None, local_file=None):
     Raises:
         TypeError: If `remote_file` or `local_file` are not given in non-interactive mode.
     """
+    my_name = inspect.stack()[0][3]
+
     if interactive:
         parser = argparse.ArgumentParser()
-        parser.prog = "%s fetch" % parser.prog
+        parser.prog = "%s %s" % (parser.prog, my_name)
         parser.description = "Copy the remote_file from the submit machine to the execute machine, naming it local_file."
         parser.add_argument("remote_file")
         parser.add_argument("local_file")
@@ -30,7 +33,7 @@ def fetch(remote_file=None, local_file=None):
         local_file = args.local_file
     
     if not isinstance(remote_file, str) or not isinstance(local_file, str):
-        raise TypeError("fetch() requires remote_file and local_file")
+        raise TypeError("%s() requires remote_file and local_file" % my_name)
 
     with htchirp.HTChirp() as chirp:
         chirp.fetch(remote_file, local_file)
@@ -65,9 +68,11 @@ w, open for writing; a, force all writes to append; t, truncate before use;
 c, create the file, if it does not exist; x, fail if c is given and the file already exists. 
 """
 
+    my_name = inspect.stack()[0][3]
+
     if interactive:
         parser = argparse.ArgumentParser()
-        parser.prog = "%s fetch" % parser.prog
+        parser.prog = "%s %s" % (parser.prog, my_name)
         parser.description = description
         parser.formatter_class = argparse.RawTextHelpFormatter
         parser.add_argument("local_file")
@@ -81,7 +86,7 @@ c, create the file, if it does not exist; x, fail if c is given and the file alr
         perm = args.perm
     
     if not isinstance(remote_file, str) or not isinstance(local_file, str):
-        raise TypeError("put() requires at least remote_file and local_file")
+        raise TypeError("%s() requires at least remote_file and local_file" % my_name)
 
     opt_params = {}
     if mode:
@@ -96,6 +101,31 @@ c, create the file, if it does not exist; x, fail if c is given and the file alr
 
     with htchirp.HTChirp() as chirp:
         chirp.put(local_file, remote_file, **opt_params)
+
+def remove(remote_file=None):
+    """Remove the remote_file file from the submit machine.
+    
+    Args:
+        remote_file (string, optional): File on submit machine. Defaults to None.
+    
+    Raises:
+        TypeError: If `remote_file` is not given in non-interactive mode.
+    """
+    my_name = inspect.stack()[0][3]
+
+    if interactive:
+        parser = argparse.ArgumentParser()
+        parser.prog = "%s %s" % (parser.prog, my_name)
+        parser.description = "Remove the remote_file file from the submit machine."
+        parser.add_argument("remote_file")
+        args = parser.parse_args(sys.argv[2:])
+        remote_file = args.remote_file
+    
+    if not isinstance(remote_file, str):
+        raise TypeError("%s() requires remote_file" % my_name)
+
+    with htchirp.HTChirp() as chirp:
+        chirp.remove(remote_file)
 
 if __name__ == "__main__":
     # Help text

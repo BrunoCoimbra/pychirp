@@ -1,46 +1,55 @@
 import sys
-import inspect
 import argparse
+import re
 import htchirp
 
-# Every callable function defined here will be a valid pychirp sub-command.
+from inspect import signature, Parameter
+
+# Every callable function not starting with "_" defined here will be a valid pychirp sub-command.
 # When defining a new function, please refer to an existing one as a model.
 # All functions should implement both interactive and non-interactive parameter input.
 
 # Functions take arguments from the command line when True
 interactive = False
 
-def fetch(remote_file=None, local_file=None):
+def _interactive(func):
+    """Makes the function callable from a console.
+    """
+    def wrapper(*args, **kwargs):
+        if interactive:
+            parser = argparse.ArgumentParser()
+            parser.prog = "%s %s" % (parser.prog, func.__name__)
+            parser.description = re.split(r"\n\s*\n", func.__doc__)[0]
+            for arg in signature(func).parameters.values():
+                if arg.default is Parameter.empty:
+                    parser.add_argument(arg.name)
+                else:
+                    parser.add_argument("-" + arg.name)
+            parsed_args = parser.parse_args(sys.argv[2:])
+            return func(**vars(parsed_args))
+        return func(*args, **kwargs)
+    return wrapper
+
+@_interactive
+def fetch(remote_file, local_file):
     """Copy the remote_file from the submit machine to the execute machine, naming it local_file.
     
     Args:
         remote_file (string, optional): File on submit machine. Defaults to None.
         local_file (string, optional): File on execute machine. Defaults to None.
     
-    Raises:
-        TypeError: If `remote_file` or `local_file` are not given in non-interactive mode.
+    Returns:
+        integer: Bytes written
     """
-    my_name = inspect.stack()[0][3]
-
-    if interactive:
-        parser = argparse.ArgumentParser()
-        parser.prog = "%s %s" % (parser.prog, my_name)
-        parser.description = "Copy the remote_file from the submit machine to the execute machine, naming it local_file."
-        parser.add_argument("remote_file")
-        parser.add_argument("local_file")
-        args = parser.parse_args(sys.argv[2:])
-        remote_file = args.remote_file
-        local_file = args.local_file
-    
-    if not isinstance(remote_file, str) or not isinstance(local_file, str):
-        raise TypeError("%s() requires remote_file and local_file" % my_name)
 
     with htchirp.HTChirp() as chirp:
-        chirp.fetch(remote_file, local_file)
+        return chirp.fetch(remote_file, local_file)
 
-def put(remote_file=None, local_file=None, mode=None, perm=None):
+@_interactive
+def put(remote_file, local_file, mode=None, perm=None):
     """Copy the local_file from the execute machine to the submit machine, naming it remote_file.
-       The optional -mode mode argument is one or more of the following characters describing the remote_file file:
+       The optional perm argument describes the file access permissions in a Unix format.
+       The optional mode argument is one or more of the following characters describing the remote_file file:
        w, open for writing; a, force all writes to append; t, truncate before use;
        c, create the file, if it does not exist; x, fail if c is given and the file already exists.
     
@@ -55,39 +64,9 @@ def put(remote_file=None, local_file=None, mode=None, perm=None):
             x, fail if c is given and the file already exists. Defaults to None.
         perm (string, optional): Describes the file access permissions in a Unix format.
     
-    Raises:
-        TypeError: If `remote_file` or `local_file` are not given in non-interactive mode.
+    Returns:
+        integer: Size of written file
     """
-    description = """Copy the local_file from the execute machine to the submit machine, naming it remote_file.
-
-The optional -perm UnixPerm argument describes the file access permissions in a Unix format;
-660 is an example Unix format.
-
-The optional -mode mode argument is one or more of the following characters describing the remote_file file:
-w, open for writing; a, force all writes to append; t, truncate before use;
-c, create the file, if it does not exist; x, fail if c is given and the file already exists. 
-"""
-
-    my_name = inspect.stack()[0][3]
-
-    if interactive:
-        parser = argparse.ArgumentParser()
-        parser.prog = "%s %s" % (parser.prog, my_name)
-        parser.description = description
-        parser.formatter_class = argparse.RawTextHelpFormatter
-        parser.add_argument("local_file")
-        parser.add_argument("remote_file")
-        parser.add_argument("-mode")
-        parser.add_argument("-perm")
-        args = parser.parse_args(sys.argv[2:])
-        local_file = args.local_file
-        remote_file = args.remote_file
-        mode = args.mode
-        perm = args.perm
-    
-    if not isinstance(remote_file, str) or not isinstance(local_file, str):
-        raise TypeError("%s() requires at least remote_file and local_file" % my_name)
-
     opt_params = {}
     if mode:
         # Add "w" to along with the following characters to reproduce condor_chirp behavior
@@ -100,32 +79,32 @@ c, create the file, if it does not exist; x, fail if c is given and the file alr
         opt_params["mode"] = perm
 
     with htchirp.HTChirp() as chirp:
-        chirp.put(local_file, remote_file, **opt_params)
+        return chirp.put(remote_file, local_file, mode, perm)
 
-def remove(remote_file=None):
+@_interactive
+def remove(remote_file):
     """Remove the remote_file file from the submit machine.
     
     Args:
         remote_file (string, optional): File on submit machine. Defaults to None.
-    
-    Raises:
-        TypeError: If `remote_file` is not given in non-interactive mode.
     """
-    my_name = inspect.stack()[0][3]
-
-    if interactive:
-        parser = argparse.ArgumentParser()
-        parser.prog = "%s %s" % (parser.prog, my_name)
-        parser.description = "Remove the remote_file file from the submit machine."
-        parser.add_argument("remote_file")
-        args = parser.parse_args(sys.argv[2:])
-        remote_file = args.remote_file
-    
-    if not isinstance(remote_file, str):
-        raise TypeError("%s() requires remote_file" % my_name)
 
     with htchirp.HTChirp() as chirp:
         chirp.remove(remote_file)
+
+@_interactive
+def get_job_attr(job_attribute):
+    """Prints the named job ClassAd attribute to standard output.
+    
+    Args:
+        job_attribute (string, optional): Job ClassAd attribute. Defaults to None.
+    
+    Returns:
+        string: The value of the job attribute as a string
+    """
+
+    with htchirp.HTChirp() as chirp:
+        return chirp.get_job_attr(job_attribute)
 
 if __name__ == "__main__":
     # Help text
@@ -171,8 +150,12 @@ commands:
     args = parser.parse_args(sys.argv[1:2])
 
     # Call the command function
-    if args.command in dir() and callable(eval(args.command)):
+    if args.command in dir() \
+    and not args.command.startswith("_") \
+    and callable(eval(args.command)):
         interactive = True
-        eval(args.command)()
+        response = eval(args.command)()
+        if response is not None:
+            print(response)
     else:
         print("error: command not implemented")

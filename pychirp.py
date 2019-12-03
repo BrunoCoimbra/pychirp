@@ -122,6 +122,20 @@ def set_job_attr(job_attribute, attribute_value):
     with htchirp.HTChirp() as chirp:
         chirp.set_job_attr(job_attribute, attribute_value)
 
+@_interactive
+def get_job_attr_delayed(job_attribute):
+    """Prints the named job ClassAd attribute to standard output, potentially reading the cached value from a recent set_job_attr_delayed.
+    
+    Args:
+        job_attribute (string, optional): Job ClassAd attribute.
+    
+    Returns:
+        string: The value of the job attribute as a string
+    """
+
+    with htchirp.HTChirp() as chirp:
+        return chirp.get_job_attr_delayed(job_attribute)
+
 if __name__ == "__main__":
     # Help text
     description = "Drop-in replacement of condor_chirp in Pure Python"

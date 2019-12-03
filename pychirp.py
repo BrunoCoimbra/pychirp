@@ -152,6 +152,17 @@ def set_job_attr_delayed(job_attribute, attribute_value):
     with htchirp.HTChirp() as chirp:
         chirp.set_job_attr_delayed(job_attribute, attribute_value)
 
+@_interactive
+def ulog(text):
+    """Appends Message to the job event log.
+    
+    Args:
+        text (string): Message to log.
+    """
+
+    with htchirp.HTChirp() as chirp:
+        chirp.ulog(text)
+
 if __name__ == "__main__":
     # Help text
     description = "Drop-in replacement of condor_chirp in Pure Python"

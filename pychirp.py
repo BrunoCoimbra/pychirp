@@ -21,10 +21,14 @@ def _interactive(func):
             parser.prog = "%s %s" % (parser.prog, func.__name__)
             parser.description = re.split(r"\n\s*\n", func.__doc__)[0]
             for arg in signature(func).parameters.values():
+                arghelp = None
+                argdoc = re.findall(r"%s\s\(.*\)\:\s(.*)" % arg.name, func.__doc__)
+                if argdoc:
+                    arghelp = argdoc[0]
                 if arg.default is Parameter.empty:
-                    parser.add_argument(arg.name)
+                    parser.add_argument(arg.name, help=arghelp)
                 else:
-                    parser.add_argument("-" + arg.name)
+                    parser.add_argument("-" + arg.name, help=arghelp)
             parsed_args = parser.parse_args(sys.argv[2:])
             return func(**vars(parsed_args))
         return func(*args, **kwargs)
@@ -35,8 +39,8 @@ def fetch(remote_file, local_file):
     """Copy the remote_file from the submit machine to the execute machine, naming it local_file.
     
     Args:
-        remote_file (string, optional): File on submit machine. Defaults to None.
-        local_file (string, optional): File on execute machine. Defaults to None.
+        remote_file (string, optional): File on submit machine.
+        local_file (string, optional): File on execute machine.
     
     Returns:
         integer: Bytes written
@@ -54,15 +58,15 @@ def put(remote_file, local_file, mode=None, perm=None):
        c, create the file, if it does not exist; x, fail if c is given and the file already exists.
     
     Args:
-        remote_file (string, optional): File on submit machine. Defaults to None.
-        local_file (string, optional): File on execute machine. Defaults to None.
-        mode (string, optional): Decribes remote_file open mode with one of the following characters. Defaults to None.
+        remote_file (string, optional): File on submit machine.
+        local_file (string, optional): File on execute machine.
+        mode (string, optional): File open modes (one or more of 'watcx'). Defaults to None.
             w, open for writing;
             a, force all writes to append;
             t, truncate before use;
             c, create the file, if it does not exist;
             x, fail if c is given and the file already exists. Defaults to None.
-        perm (string, optional): Describes the file access permissions in a Unix format.
+        perm (string, optional): Describes the file access permissions in a Unix format. Defaults to None.
     
     Returns:
         integer: Size of written file
@@ -86,7 +90,7 @@ def remove(remote_file):
     """Remove the remote_file file from the submit machine.
     
     Args:
-        remote_file (string, optional): File on submit machine. Defaults to None.
+        remote_file (string, optional): File on submit machine.
     """
 
     with htchirp.HTChirp() as chirp:
@@ -97,7 +101,7 @@ def get_job_attr(job_attribute):
     """Prints the named job ClassAd attribute to standard output.
     
     Args:
-        job_attribute (string, optional): Job ClassAd attribute. Defaults to None.
+        job_attribute (string, optional): Job ClassAd attribute.
     
     Returns:
         string: The value of the job attribute as a string
@@ -105,6 +109,18 @@ def get_job_attr(job_attribute):
 
     with htchirp.HTChirp() as chirp:
         return chirp.get_job_attr(job_attribute)
+
+@_interactive
+def set_job_attr(job_attribute, attribute_value):
+    """Sets the named job ClassAd attribute with the given attribute value.
+    
+    Args:
+        job_attribute (string): Job ClassAd attribute.
+        attribute_value (string): Job ClassAd value.
+    """
+
+    with htchirp.HTChirp() as chirp:
+        chirp.set_job_attr(job_attribute, attribute_value)
 
 if __name__ == "__main__":
     # Help text

@@ -136,6 +136,22 @@ def get_job_attr_delayed(job_attribute):
     with htchirp.HTChirp() as chirp:
         return chirp.get_job_attr_delayed(job_attribute)
 
+@_interactive
+def set_job_attr_delayed(job_attribute, attribute_value):
+    """Sets the named job ClassAd attribute with the given attribute value, but does not immediately
+       synchronize the value with the submit side. It can take 15 minutes before the synchronization occurs.
+       This has much less overhead than the non delayed version. With this option, jobs do not need ClassAd
+       attribute WantIOProxy set. With this option, job attribute names are restricted to begin with the case
+       sensitive substring Chirp. 
+    
+    Args:
+        job_attribute (string): Job ClassAd attribute.
+        attribute_value (string): Job ClassAd value.
+    """
+
+    with htchirp.HTChirp() as chirp:
+        chirp.set_job_attr_delayed(job_attribute, attribute_value)
+
 if __name__ == "__main__":
     # Help text
     description = "Drop-in replacement of condor_chirp in Pure Python"

@@ -19,16 +19,21 @@ def _interactive(func):
         if interactive:
             parser = argparse.ArgumentParser()
             parser.prog = "%s %s" % (parser.prog, func.__name__)
-            parser.description = re.split(r"\n\s*\n", func.__doc__)[0]
+            if func.__doc__:
+                parser.description = re.split(r"\n\s*\n", func.__doc__)[0]
             for arg in signature(func).parameters.values():
                 arghelp = None
-                argdoc = re.findall(r"%s\s\(.*\)\:\s(.*)" % arg.name, func.__doc__)
-                if argdoc:
-                    arghelp = argdoc[0]
+                if func.__doc__:
+                    argdoc = re.findall(r"%s\s\(.*\)\:\s(.*)(?:\sDefaults\sto\s.*)" % arg.name, func.__doc__)
+                    if argdoc:
+                        arghelp = argdoc[0]
                 if arg.default is Parameter.empty:
                     parser.add_argument(arg.name, help=arghelp)
                 else:
-                    parser.add_argument("-" + arg.name, help=arghelp)
+                    argnargs = None
+                    if isinstance(arg.default, tuple):
+                        argnargs = len(arg.default)
+                    parser.add_argument("-" + arg.name, help=arghelp, nargs=argnargs)
             parsed_args = parser.parse_args(sys.argv[2:])
             return func(**vars(parsed_args))
         return func(*args, **kwargs)
@@ -162,6 +167,24 @@ def ulog(text):
 
     with htchirp.HTChirp() as chirp:
         chirp.ulog(text)
+
+@_interactive
+def read(remote_file, length, offset=None, stride=(None, None)):
+    """Read length bytes from remote_file. Optionally, implement a stride by starting the read at offset
+       and reading stride[0](length) bytes with a stride of stride[1](skip) bytes.
+    
+    Args:
+        remote_file (string): File on the submit machine.
+        length (integer): Number of bytes to read.
+        offset (integer, optional): Number of bytes to offset from beginning of file. Defaults to None.
+        stride (tuple, optional): Number of bytes to read followed by number of bytes to skip per stride. Defaults to (None, None).
+    
+    Returns:
+        string: Data read from file
+    """
+
+    with htchirp.HTChirp() as chirp:
+        return chirp.read(remote_file, length, offset, stride[0], stride[1])
 
 if __name__ == "__main__":
     # Help text

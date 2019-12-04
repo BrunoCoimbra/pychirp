@@ -3,7 +3,7 @@ import argparse
 import re
 import htchirp
 
-from inspect import signature, Parameter
+from inspect import getargspec
 
 # Every callable function not starting with "_" defined here will be a valid pychirp sub-command.
 # When defining a new function, please refer to an existing one as a model.
@@ -17,24 +17,41 @@ def _interactive(func):
     """
     def wrapper(*args, **kwargs):
         if interactive:
+            # Parser initialization
             parser = argparse.ArgumentParser()
+            
+            # Define command usage
             parser.prog = "%s %s" % (parser.prog, func.__name__)
+            
+            # Define command help based on an available docstring
             if func.__doc__:
                 parser.description = re.split(r"\n\s*\n", func.__doc__)[0]
-            for arg in signature(func).parameters.values():
+            
+            # Retrieve function signature to build arguments
+            args, _, _, defaults = getargspec(func)
+            if defaults:
+                defaults = dict(zip(args[-len(defaults):], defaults))
+            else:
+                defaults = {}
+
+            # Add arguments to the parser and tries to extract help from an available docstring
+            for arg in args:
                 arghelp = None
                 if func.__doc__:
-                    argdoc = re.findall(r"%s\s\(.*\)\:\s(.*)(?:\sDefaults\sto\s.*)" % arg.name, func.__doc__)
+                    argdoc = re.findall(r"%s\s\(.*\)\:\s(.*)" % arg, func.__doc__)
                     if argdoc:
-                        arghelp = argdoc[0]
-                if arg.default is Parameter.empty:
-                    parser.add_argument(arg.name, help=arghelp)
+                        arghelp = re.sub(r"\sdefaults\sto\s.*", "", argdoc[0].lower()).strip(".")
+                if arg not in defaults:
+                    parser.add_argument(arg, help=arghelp)
                 else:
                     argnargs = None
-                    if isinstance(arg.default, tuple):
-                        argnargs = len(arg.default)
-                    parser.add_argument("-" + arg.name, help=arghelp, nargs=argnargs)
+                    if isinstance(defaults[arg], tuple):
+                        argnargs = len(defaults[arg])
+                    parser.add_argument("-" + arg, help=arghelp, nargs=argnargs)
+
+            # Parse system args
             parsed_args = parser.parse_args(sys.argv[2:])
+
             return func(**vars(parsed_args))
         return func(*args, **kwargs)
     return wrapper

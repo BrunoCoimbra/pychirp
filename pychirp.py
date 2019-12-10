@@ -14,6 +14,12 @@ interactive = False
 
 def _interactive(custom={}):
     """Makes the function callable from a console.
+    
+    Args:
+        custom (dict, optional): Custom ArgumentParser.add_argument parameters. Defaults to {}.
+    
+    Returns:
+        func: Decorated function.
     """
     def decorator(func):
         def wrapper(*args, **kwargs):
@@ -24,7 +30,7 @@ def _interactive(custom={}):
                 # Define command usage
                 parser.prog = "%s %s" % (parser.prog, func.__name__)
                 
-                # Define command help based on an available docstring
+                # Extract command help based on an available docstring
                 if func.__doc__:
                     parser.description = re.split(r"\n\s*\n", func.__doc__)[0]
                 
@@ -38,15 +44,19 @@ def _interactive(custom={}):
                 # Add arguments to the parser and tries to extract help from an available docstring
                 for arg in args:
                     arghelp = None
-                    if func.__doc__:
+                    if func.__doc__: # Extract argument help based on an available docstring
                         argdoc = re.findall(r"%s\s\(.*\)\:\s(.*)" % arg, func.__doc__)
                         if argdoc:
                             arghelp = re.sub(r"\sdefaults\sto\s.*", "", argdoc[0].lower()).strip(".")
                     argname = arg
                     argoptions = {"help": arghelp}
-                    if arg in defaults:
+                    if arg in defaults: # Additional settings for optional arguments
                         argname = "-" + arg
-                    if arg in custom:
+                        if defaults[arg] is False: # Detect flags
+                            argoptions["action"] = "store_true"
+                        if defaults[arg] is True:
+                            argoptions["action"] = "store_false"
+                    if arg in custom: # Custom settings for arguments
                         argoptions.update(custom[arg])
                     parser.add_argument(argname, **argoptions)
 
@@ -126,7 +136,7 @@ def get_job_attr(job_attribute):
         job_attribute (string, optional): Job ClassAd attribute.
     
     Returns:
-        string: The value of the job attribute as a string
+        string: The value of the job attribute as a string.
     """
 
     with htchirp.HTChirp() as chirp:
@@ -152,7 +162,7 @@ def get_job_attr_delayed(job_attribute):
         job_attribute (string, optional): Job ClassAd attribute.
     
     Returns:
-        string: The value of the job attribute as a string
+        string: The value of the job attribute as a string.
     """
 
     with htchirp.HTChirp() as chirp:
@@ -222,6 +232,18 @@ def write(remote_file, local_file, length, offset=None, stride=(None, None)):
 
     with htchirp.HTChirp() as chirp:
         chirp.write(data, remote_file, length=length, offset=offset, stride_length=stride[0], stride_skip=stride[1])
+
+@_interactive()
+def rmdir(remotepath, r=False):
+    """Delete the directory specified by RemotePath. If the optional -r is specified, recursively delete the entire directory.
+    
+    Args:
+        remotepath (string): Path to directory on the submit machine.
+        r (bool, optional): Recursively delete remotepath. Defaults to False.
+    """
+
+    with htchirp.HTChirp() as chirp:
+        chirp.rmdir(remotepath, r)
 
 if __name__ == "__main__":
     # Help text

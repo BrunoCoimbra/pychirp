@@ -366,6 +366,25 @@ def stat(remotepath):
 
     return out
 
+@_interactive()
+def lstat(remotepath):
+    """Get metadata for RemotePath. Examines the file, if it is a symbolic link.
+    
+    Args:
+        remotepath (string): File path to link on the remote machine.
+    
+    Returns:
+        dict: Dict of file metadata.
+    """
+
+    with htchirp.HTChirp() as chirp:
+        out = chirp.lstat(remotepath)
+    
+    for key in ["atime", "mtime", "ctime"]:
+        out[key] = datetime.fromtimestamp(out[key])
+
+    return out
+
 if __name__ == "__main__":
     # Help text
     description = "Drop-in replacement of condor_chirp in Pure Python"

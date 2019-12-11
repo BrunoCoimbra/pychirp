@@ -4,6 +4,7 @@ import re
 import htchirp
 
 from inspect import getargspec
+from datetime import datetime
 
 # Every callable function not starting with "_" defined here will be a valid pychirp sub-command.
 # When defining a new function, please refer to an existing one as a model.
@@ -68,6 +69,33 @@ def _interactive(custom={}):
             return func(*args, **kwargs)
         return wrapper
     return decorator
+
+def _print_out(out, level=0):
+    def to_str(value):
+        if type(value) is datetime:
+            return value.ctime()
+        return str(value)
+
+    prefix = level * "\t"
+
+    if type(out) is list:
+        for value in out:
+            if type(value) in (list, dict):
+                _print_out(value, level + 1)
+            else:
+                print(prefix + to_str(value))
+        return
+    
+    if type(out) is dict:
+        for key, value in out.items():
+            if type(value) in (list, dict):
+                print(prefix + to_str(key))
+                _print_out(value, level + 1)
+            else:
+                print(prefix + "%s: %s" % (to_str(key), to_str(value)))
+        return
+
+    print(prefix + to_str(out))
 
 @_interactive()
 def fetch(remote_file, local_file):
@@ -245,39 +273,49 @@ def rmdir(remotepath, r=False):
     with htchirp.HTChirp() as chirp:
         chirp.rmdir(remotepath, r)
 
+@_interactive()
+def getdir(remotepath, l=False):
+
+    with htchirp.HTChirp() as chirp:
+        out = chirp.getdir(remotepath, l)
+
+    for item in out:
+        for key in ["atime", "mtime", "ctime"]:
+            out[item][key] = datetime.fromtimestamp(out[item][key])
+
+    return out
+
 if __name__ == "__main__":
     # Help text
     description = "Drop-in replacement of condor_chirp in Pure Python"
     usage = "pychirp.py [-h] command [args]"
-    epilog = """
-commands:
-  fetch remote_file local_file
-  put [-mode mode] [-perm perm] local_file remote_file
-  remove remote_file
-  get_job_attr job_attribute
-  get_job_attr_delayed job_attribute
-  set_job_attr job_attribute attribute_value
-  set_job_attr_delayed job_attribute attribute_value
-  ulog text
-  phase phasestring
-  read [-offset offset] [-stride length skip] remote_file length
-  write [-offset remote_offset] [-stride length skip] remote_file local_file
-  rmdir [-r] remotepath
-  getdir [-l] remotepath
-  whoami
-  whoareyou remotepath
-  link [-s] oldpath newpath
-  readlink remotepath length
-  stat remotepath
-  lstat remotepath
-  statfs remotepath
-  access remotepath mode(rwxf)
-  chmod remotepath mode
-  chown remotepath uid gid
-  lchown remotepath uid gid
-  truncate remotepath length
-  utime remotepath actime mtime
-"""
+    epilog = ("commands:\n"
+              "  fetch remote_file local_file\n"
+              "  put [-mode mode] [-perm perm] local_file remote_file\n"
+              "  remove remote_file\n"
+              "  get_job_attr job_attribute\n"
+              "  get_job_attr_delayed job_attribute\n"
+              "  set_job_attr job_attribute attribute_value\n"
+              "  set_job_attr_delayed job_attribute attribute_value\n"
+              "  ulog text\n"
+              "  phase phasestring\n"
+              "  read [-offset offset] [-stride length skip] remote_file length\n"
+              "  write [-offset remote_offset] [-stride length skip] remote_file local_file\n"
+              "  rmdir [-r] remotepath\n"
+              "  getdir [-l] remotepath\n"
+              "  whoami\n"
+              "  whoareyou remotepath\n"
+              "  link [-s] oldpath newpath\n"
+              "  readlink remotepath length\n"
+              "  stat remotepath\n"
+              "  lstat remotepath\n"
+              "  statfs remotepath\n"
+              "  access remotepath mode(rwxf)\n"
+              "  chmod remotepath mode\n"
+              "  chown remotepath uid gid\n"
+              "  lchown remotepath uid gid\n"
+              "  truncate remotepath length\n"
+              "  utime remotepath actime mtime")
 
     # Handle command line arguments
     parser = argparse.ArgumentParser()
@@ -295,6 +333,6 @@ commands:
         interactive = True
         response = eval(args.command)()
         if response is not None:
-            print(response)
+            _print_out(response)
     else:
         print("error: command not implemented")

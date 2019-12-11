@@ -326,7 +326,7 @@ def link(oldpath, newpath, s=False):
     
     Args:
         oldpath (string): File path to link from on the remote machine.
-        newpath (string): File path to link to on the remote machine
+        newpath (string): File path to link to on the remote machine.
         s (bool, optional): Create a symbolic link instead. Defaults to False.
     """
 
@@ -335,17 +335,36 @@ def link(oldpath, newpath, s=False):
 
 @_interactive({"remotepath": {"nargs": "+"}})
 def readlink(remotepath):
-    """Read the contents of the file defined by the symbolic link remotepath
+    """Read the contents of the file defined by the symbolic link remotepath.
     
     Args:
-        remotepath (string): File path to link on the remote machine
+        remotepath (string): File path to link on the remote machine.
     
     Returns:
-        [type]: [description]
+        string: Contents of the link.
     """
 
     with htchirp.HTChirp() as chirp:
         return chirp.readlink(remotepath[0]).decode()
+
+@_interactive()
+def stat(remotepath):
+    """Get metadata for remotepath. Examines the target, if it is a symbolic link.
+    
+    Args:
+        remotepath (string): File path to link on the remote machine.
+    
+    Returns:
+        dict: Dict of file metadata.
+    """
+
+    with htchirp.HTChirp() as chirp:
+        out = chirp.stat(remotepath)
+    
+    for key in ["atime", "mtime", "ctime"]:
+        out[key] = datetime.fromtimestamp(out[key])
+
+    return out
 
 if __name__ == "__main__":
     # Help text

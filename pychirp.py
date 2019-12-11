@@ -333,6 +333,20 @@ def link(oldpath, newpath, s=False):
     with htchirp.HTChirp() as chirp:
         chirp.link(oldpath, newpath, s)
 
+@_interactive({"remotepath": {"nargs": "+"}})
+def readlink(remotepath):
+    """Read the contents of the file defined by the symbolic link remotepath
+    
+    Args:
+        remotepath (string): File path to link on the remote machine
+    
+    Returns:
+        [type]: [description]
+    """
+
+    with htchirp.HTChirp() as chirp:
+        return chirp.readlink(remotepath[0]).decode()
+
 if __name__ == "__main__":
     # Help text
     description = "Drop-in replacement of condor_chirp in Pure Python"
@@ -354,7 +368,7 @@ if __name__ == "__main__":
               "  whoami\n"
               "  whoareyou remotepath\n"
               "  link [-s] oldpath newpath\n"
-              "  readlink remotepath length\n"
+              "  readlink remotepath\n"
               "  stat remotepath\n"
               "  lstat remotepath\n"
               "  statfs remotepath\n"

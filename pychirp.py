@@ -275,6 +275,16 @@ def rmdir(remotepath, r=False):
 
 @_interactive()
 def getdir(remotepath, l=False):
+    """List the contents of the directory specified by RemotePath.
+    
+    Args:
+        remotepath (string): Path to directory on the submit machine.
+        l (bool, optional): Returns a dict of file metadata. Defaults to False.
+    
+    Returns:
+        list: List of files, when l is False.
+        dict: Dictionary of files with their metadata, when l is True.
+    """
 
     with htchirp.HTChirp() as chirp:
         out = chirp.getdir(remotepath, l)
@@ -284,6 +294,17 @@ def getdir(remotepath, l=False):
             out[item][key] = datetime.fromtimestamp(out[item][key])
 
     return out
+
+@_interactive()
+def whoami():
+    """Get the user’s current identity.
+    
+    Returns:
+        string: The user's identity.
+    """
+
+    with htchirp.HTChirp() as chirp:
+        return chirp.whoami()
 
 if __name__ == "__main__":
     # Help text

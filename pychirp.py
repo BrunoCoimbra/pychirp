@@ -368,7 +368,7 @@ def stat(remotepath):
 
 @_interactive()
 def lstat(remotepath):
-    """Get metadata for RemotePath. Examines the file, if it is a symbolic link.
+    """Get metadata for remotepath. Examines the file, if it is a symbolic link.
     
     Args:
         remotepath (string): File path to link on the remote machine.
@@ -384,6 +384,20 @@ def lstat(remotepath):
         out[key] = datetime.fromtimestamp(out[key])
 
     return out
+
+@_interactive()
+def statfs(remotepath):
+    """Get file system metadata for remotepath.
+    
+    Args:
+        remotepath (string): File path to link on the remote machine.
+    
+    Returns:
+        dict: Dict of filesystem metadata.
+    """
+
+    with htchirp.HTChirp() as chirp:
+        return chirp.statfs(remotepath)
 
 if __name__ == "__main__":
     # Help text

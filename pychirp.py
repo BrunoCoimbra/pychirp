@@ -306,6 +306,20 @@ def whoami():
     with htchirp.HTChirp() as chirp:
         return chirp.whoami()
 
+@_interactive()
+def whoareyou(remotepath):
+    """Get the identity of RemoteHost.
+    
+    Args:
+        remotepath (string): Remote host
+    
+    Returns:
+        string: The server's identity
+    """
+
+    with htchirp.HTChirp() as chirp:
+        return chirp.whoareyou(remotepath)
+
 if __name__ == "__main__":
     # Help text
     description = "Drop-in replacement of condor_chirp in Pure Python"

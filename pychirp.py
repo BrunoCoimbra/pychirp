@@ -297,7 +297,7 @@ def getdir(remotepath, l=False):
 
 @_interactive()
 def whoami():
-    """Get the user’s current identity.
+    """Get the user's current identity.
     
     Returns:
         string: The user's identity.
@@ -319,6 +319,19 @@ def whoareyou(remotepath):
 
     with htchirp.HTChirp() as chirp:
         return chirp.whoareyou(remotepath)
+
+@_interactive()
+def link(oldpath, newpath, s=False):
+    """Create a hard link from OldRemotePath to NewRemotePath.
+    
+    Args:
+        oldpath (string): File path to link from on the remote machine.
+        newpath (string): File path to link to on the remote machine
+        s (bool, optional): Create a symbolic link instead. Defaults to False.
+    """
+
+    with htchirp.HTChirp() as chirp:
+        chirp.link(oldpath, newpath, s)
 
 if __name__ == "__main__":
     # Help text

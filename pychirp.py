@@ -325,8 +325,8 @@ def link(oldpath, newpath, s=False):
     """Create a hard link from OldRemotePath to NewRemotePath.
     
     Args:
-        oldpath (string): File path to link from on the remote machine.
-        newpath (string): File path to link to on the remote machine.
+        oldpath (string): File path to link from on the submit machine..
+        newpath (string): File path to link to on the submit machine..
         s (bool, optional): Create a symbolic link instead. Defaults to False.
     """
 
@@ -338,7 +338,7 @@ def readlink(remotepath):
     """Read the contents of the file defined by the symbolic link remotepath.
     
     Args:
-        remotepath (string): File path to link on the remote machine.
+        remotepath (string): File path to link on the submit machine..
     
     Returns:
         string: Contents of the link.
@@ -352,7 +352,7 @@ def stat(remotepath):
     """Get metadata for remotepath. Examines the target, if it is a symbolic link.
     
     Args:
-        remotepath (string): File path to link on the remote machine.
+        remotepath (string): File path to link on the submit machine..
     
     Returns:
         dict: Dict of file metadata.
@@ -371,7 +371,7 @@ def lstat(remotepath):
     """Get metadata for remotepath. Examines the file, if it is a symbolic link.
     
     Args:
-        remotepath (string): File path to link on the remote machine.
+        remotepath (string): File path to link on the submit machine..
     
     Returns:
         dict: Dict of file metadata.
@@ -390,7 +390,7 @@ def statfs(remotepath):
     """Get file system metadata for remotepath.
     
     Args:
-        remotepath (string): File path to link on the remote machine.
+        remotepath (string): File path to link on the submit machine.
     
     Returns:
         dict: Dict of filesystem metadata.
@@ -398,6 +398,19 @@ def statfs(remotepath):
 
     with htchirp.HTChirp() as chirp:
         return chirp.statfs(remotepath)
+
+@_interactive()
+def access(remotepath, mode):
+    """Check access permissions for RemotePath. Mode is one or more of the characters
+       r, w, x, or f, representing read, write, execute, and existence, respectively.
+    
+    Args:
+        remotepath (string): Path to examine on the submit machine.
+        mode (string): Mode to check (one or more of 'rwxf').
+    """
+
+    with htchirp.HTChirp() as chirp:
+        chirp.access(remotepath, mode)
 
 if __name__ == "__main__":
     # Help text

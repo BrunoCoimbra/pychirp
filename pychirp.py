@@ -230,6 +230,17 @@ def ulog(text):
     with htchirp.HTChirp() as chirp:
         chirp.ulog(text)
 
+@_interactive()
+def phase(phasestring):
+    """Tell HTCondor that the job is changing phases.
+    
+    Args:
+        phasestring (string): New phase.
+    """
+
+    with htchirp.HTChirp() as chirp:
+        chirp.phase(phasestring)
+
 @_interactive({"stride":{"nargs": 2, "metavar": ("LENGTH", "SKIP")}})
 def read(remote_file, length, offset=None, stride=(None, None)):
     """Read length bytes from remote_file. Optionally, implement a stride by starting the read at offset

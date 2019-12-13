@@ -325,8 +325,8 @@ def link(oldpath, newpath, s=False):
     """Create a hard link from OldRemotePath to NewRemotePath.
     
     Args:
-        oldpath (string): File path to link from on the submit machine..
-        newpath (string): File path to link to on the submit machine..
+        oldpath (string): File path to link from on the submit machine.
+        newpath (string): File path to link to on the submit machine.
         s (bool, optional): Create a symbolic link instead. Defaults to False.
     """
 
@@ -338,7 +338,7 @@ def readlink(remotepath):
     """Read the contents of the file defined by the symbolic link remotepath.
     
     Args:
-        remotepath (string): File path to link on the submit machine..
+        remotepath (string): File path to link on the submit machine.
     
     Returns:
         string: Contents of the link.
@@ -352,7 +352,7 @@ def stat(remotepath):
     """Get metadata for remotepath. Examines the target, if it is a symbolic link.
     
     Args:
-        remotepath (string): File path to link on the submit machine..
+        remotepath (string): File path to link on the submit machine.
     
     Returns:
         dict: Dict of file metadata.
@@ -371,7 +371,7 @@ def lstat(remotepath):
     """Get metadata for remotepath. Examines the file, if it is a symbolic link.
     
     Args:
-        remotepath (string): File path to link on the submit machine..
+        remotepath (string): File path to link on the submit machine.
     
     Returns:
         dict: Dict of file metadata.
@@ -424,6 +424,19 @@ def chmod(remotepath, mode):
 
     with htchirp.HTChirp() as chirp:
         chirp.chmod(remotepath, int(mode, 8))
+
+@_interactive()
+def chown(remotepath, uid, gid):
+    """Change the ownership of remotepath to uid and gid. Changes the target of remotepath, if it is a symbolic link.
+    
+    Args:
+        remotepath (string): Target path on the submit machine.
+        uid (int): User's UID.
+        gid (int): User's GID.
+    """
+
+    with htchirp.HTChirp() as chirp:
+        chirp.chown(remotepath, uid, gid)
 
 if __name__ == "__main__":
     # Help text

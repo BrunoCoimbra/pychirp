@@ -412,6 +412,19 @@ def access(remotepath, mode):
     with htchirp.HTChirp() as chirp:
         chirp.access(remotepath, mode)
 
+@_interactive()
+def chmod(remotepath, mode):
+    """Change the permissions of remotepath to mode. mode describes the file access
+       permissions in a Unix format; 660 is an example Unix format.
+    
+    Args:
+        remotepath (string): Target path on the submit machine.
+        mode (string): Permission mode to set
+    """
+
+    with htchirp.HTChirp() as chirp:
+        chirp.chmod(remotepath, int(mode, 8))
+
 if __name__ == "__main__":
     # Help text
     description = "Drop-in replacement of condor_chirp in Pure Python"

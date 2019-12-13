@@ -430,13 +430,26 @@ def chown(remotepath, uid, gid):
     """Change the ownership of remotepath to uid and gid. Changes the target of remotepath, if it is a symbolic link.
     
     Args:
-        remotepath (string): Target path on the submit machine.
+        remotepath (string): File on the submit machine.
         uid (int): User's UID.
         gid (int): User's GID.
     """
 
     with htchirp.HTChirp() as chirp:
         chirp.chown(remotepath, uid, gid)
+
+@_interactive()
+def lchown(remotepath, uid, gid):
+    """Change the ownership of remotepath to uid and gid. Changes the link, if remotepath is a symbolic link.
+    
+    Args:
+        remotepath (string): File on the submit machine.
+        uid (int): User's UID.
+        gid (int): User's GID.
+    """
+
+    with htchirp.HTChirp() as chirp:
+        chirp.lchown(remotepath, uid, gid)
 
 if __name__ == "__main__":
     # Help text

@@ -71,6 +71,12 @@ def _interactive(custom={}):
     return decorator
 
 def _print_out(out, level=0):
+    """Prints an output formated to a console.
+    
+    Args:
+        out (any): Output to print.
+        level (int, optional): Tabulation level. Defaults to 0.
+    """
     def to_str(value):
         if type(value) is datetime:
             return value.ctime()
@@ -184,7 +190,8 @@ def set_job_attr(job_attribute, attribute_value):
 
 @_interactive()
 def get_job_attr_delayed(job_attribute):
-    """Prints the named job ClassAd attribute to standard output, potentially reading the cached value from a recent set_job_attr_delayed.
+    """Prints the named job ClassAd attribute to standard output, potentially reading the cached value
+       from a recent set_job_attr_delayed.
     
     Args:
         job_attribute (string, optional): Job ClassAd attribute.
@@ -462,6 +469,19 @@ def truncate(remotepath, length):
 
     with htchirp.HTChirp() as chirp:
         chirp.truncate(remotepath, length)
+
+@_interactive()
+def utime(remotepath, actime, mtime):
+    """Change the access to actime and modification time to mtime of remotepath.
+    
+    Args:
+        remotepath (string): Target path on the submit machine.
+        actime (int): Access time, in seconds (Unix epoch).
+        mtime (int): Modification time, in seconds (Unix epoch).
+    """
+
+    with htchirp.HTChirp() as chirp:
+        chirp.utime(remotepath, actime, mtime)
 
 if __name__ == "__main__":
     # Help text

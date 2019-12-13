@@ -451,6 +451,18 @@ def lchown(remotepath, uid, gid):
     with htchirp.HTChirp() as chirp:
         chirp.lchown(remotepath, uid, gid)
 
+@_interactive()
+def truncate(remotepath, length):
+    """Truncates the file at remotepath to length bytes.
+    
+    Args:
+        remotepath (string): File on the submit machine.
+        length (int): Truncated length.
+    """
+
+    with htchirp.HTChirp() as chirp:
+        chirp.truncate(remotepath, length)
+
 if __name__ == "__main__":
     # Help text
     description = "Drop-in replacement of condor_chirp in Pure Python"

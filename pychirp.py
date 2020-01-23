@@ -532,7 +532,7 @@ def utime(remotepath, actime, mtime):
         chirp.utime(remotepath, actime, mtime)
 
 
-if __name__ == "__main__":
+def main():
     # Help text
     description = "Drop-in replacement of condor_chirp in Pure Python"
     usage = "pychirp.py [-h] command [args]"
@@ -581,3 +581,7 @@ if __name__ == "__main__":
             _print_out(response)
     else:
         print("error: command not implemented")
+
+
+if __name__ == "__main__":
+    main()
